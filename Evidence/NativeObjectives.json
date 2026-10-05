@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "blueprintClass": "BP_Courier_C",
+  "resolved": true,
+  "uniqueCellsConsumed": 2,
+  "route": 2,
+  "saveRestored": true,
+  "mode": "Native UE5 game execution with NullRHI; no video frames",
+  "engineVersion": "5.4.4",
+  "platform": "Linux x86_64"
+}

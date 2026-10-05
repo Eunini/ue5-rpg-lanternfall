@@ -22,21 +22,23 @@
 
 void ULanternCaptureSubsystem::Tick(float Delta)
 {
- if (!GetWorld()->IsGameWorld() || !FParse::Param(FCommandLine::Get(),TEXT("PortfolioCapture")) || bFinished) return;
- if (!GEngine || !GEngine->GameViewport) return;
+ const bool Verify=FParse::Param(FCommandLine::Get(),TEXT("PortfolioVerify"));
+ if (!GetWorld()->IsGameWorld() || (!Verify && !FParse::Param(FCommandLine::Get(),TEXT("PortfolioCapture"))) || bFinished) return;
+ if (!Verify && (!GEngine || !GEngine->GameViewport)) return;
  if (!bConfigured)
  {
   Limit=1350;FParse::Value(FCommandLine::Get(),TEXT("PortfolioFrames="),Limit);Limit=FMath::Clamp(Limit,30,3600);
   Directory=FPaths::ProjectSavedDir()/TEXT("PortfolioFrames");
   IFileManager::Get().MakeDirectory(*Directory,true);
   FApp::SetUseFixedTimeStep(true);FApp::SetFixedDeltaTime(1.0/30.0);
-  Handle=UGameViewportClient::OnScreenshotCaptured().AddUObject(this,&ULanternCaptureSubsystem::Captured);
+  if (!Verify) Handle=UGameViewportClient::OnScreenshotCaptured().AddUObject(this,&ULanternCaptureSubsystem::Captured);
   bConfigured=true;
  }
 #if WITH_EDITOR
  if (GShaderCompilingManager && GShaderCompilingManager->IsCompiling()) {Warmup=0;return;}
 #endif
  if (++Warmup<=30 || bQueued) return;
+ if (Verify) {if (++Frame>=Limit) FinishCapture(0,0);return;}
  bQueued=true;FScreenshotRequest::RequestScreenshot(TEXT("PortfolioFrame"),true,false);
 }
 void ULanternCaptureSubsystem::Captured(int32 Width,int32 Height,const TArray<FColor>& Colors)
@@ -49,7 +51,9 @@ void ULanternCaptureSubsystem::Captured(int32 Width,int32 Height,const TArray<FC
  if (PNG.IsEmpty() || !FFileHelper::SaveArrayToFile(PNG,*Name))
  {bFinished=true;FPlatformMisc::RequestExitWithStatus(false,1);return;}
  ++Frame;
- if (Frame>=Limit)
+ if (Frame>=Limit) FinishCapture(Width,Height);
+}
+void ULanternCaptureSubsystem::FinishCapture(int32 Width,int32 Height)
  {
   const auto* Player=Cast<ALanternPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(),0));
   const auto* Journey=GetWorld()->GetGameInstance()->GetSubsystem<UJourneySubsystem>();
@@ -64,10 +68,13 @@ void ULanternCaptureSubsystem::Captured(int32 Width,int32 Height,const TArray<FC
   }
   const FString Evidence=FString::Printf(TEXT("{\"success\":true,\"blueprintClass\":\"BP_Courier_C\",\"resolved\":true,\"uniqueCellsConsumed\":2,\"route\":%d,\"saveRestored\":true}"),Journey->GetRoute());
   FFileHelper::SaveStringToFile(Evidence,*(FPaths::ProjectSavedDir()/TEXT("GameplayEvidence.json")));
-  const FString Receipt=FString::Printf(TEXT("{\"success\":true,\"frames\":%d,\"width\":%d,\"height\":%d,\"fps\":30,\"renderer\":\"Unreal Engine 5.4\"}"),Frame,Width,Height);
-  FFileHelper::SaveStringToFile(Receipt,*(FPaths::ProjectSavedDir()/TEXT("PortfolioCapture.json")));
+  if (Width>0 && Height>0)
+  {
+   const FString Receipt=FString::Printf(TEXT("{\"success\":true,\"frames\":%d,\"width\":%d,\"height\":%d,\"fps\":30,\"renderer\":\"Unreal Engine 5.4\"}"),Frame,Width,Height);
+   FFileHelper::SaveStringToFile(Receipt,*(FPaths::ProjectSavedDir()/TEXT("PortfolioCapture.json")));
+  }
+  UE_LOG(LogTemp,Display,TEXT("Lanternfall native objectives complete: route=%d rendered=%d"),Journey->GetRoute(),Width>0);
   bFinished=true;FPlatformMisc::RequestExit(false);
- }
 }
 void ULanternCaptureSubsystem::Deinitialize()
 {

@@ -2,7 +2,7 @@
 
 A compact first-person RPG about allocating a town's last reserve power circuit. Two energy cells can restore a field clinic or call for outside help through the relay. The destination changes the dialogue, objective and reward.
 
-The native editor modules compile in Unreal Engine 5.4.4. The repository includes the engine-generated courier, interaction Blueprints, material and courtyard map. Native gameplay recording is underway; the download will be linked once reviewed.
+The native editor modules compile in Unreal Engine 5.4.4. The repository includes the engine-generated courier, interaction Blueprints, material and courtyard map. A native UE5 run completed the relay story branch, including two unique pickups, save/load and quest resolution. The objective receipt is in `Evidence/NativeObjectives.json`. The clinic gameplay recording is underway.
 
 ## Playable story
 

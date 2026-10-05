@@ -54,6 +54,7 @@ void ALanternUsable::OnConstruction(const FTransform& Transform)
   PowerLight=NewObject<UPointLightComponent>(this);
   AddInstanceComponent(PowerLight);PowerLight->SetupAttachment(Body);
   PowerLight->SetRelativeLocation(FVector(-70,0,60)/Scale);
+  PowerLight->SetMobility(EComponentMobility::Movable);
   PowerLight->SetLightColor(Action==ELanternAction::Relay?Blue:Amber);
   PowerLight->SetIntensity(0.f);PowerLight->SetAttenuationRadius(600.f);
   PowerLight->SetCastShadows(false);PowerLight->RegisterComponent();
