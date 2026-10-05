@@ -49,17 +49,22 @@ build=batch/("Build.bat" if system=="Windows" else ("Mac/Build.sh" if system=="D
 editor=engine/"Engine"/"Binaries"/target_platform/("UnrealEditor-Cmd.exe" if system=="Windows" else "UnrealEditor-Cmd")
 if not editor.is_file(): editor=editor.with_name("UnrealEditor.exe" if system=="Windows" else "UnrealEditor")
 if not build.is_file() or not editor.is_file(): p.error("Engine build tools and editor executable were not found")
-subprocess.run([str(build),config["target"],target_platform,"Development","-Project="+str(project),"-WaitMutex","-NoHotReload","-NoDebugInfo","-MaxParallelActions=3"],check=True)
+subprocess.run([str(build),config["target"],target_platform,"Development","-Project="+str(project),"-WaitMutex","-NoHotReload","-NoDebugInfo","-MaxParallelActions=6"],check=True)
 subprocess.run([str(editor),str(project),"-run=PortfolioForge","-unattended","-NullRHI","-nosplash","-log"],check=True)
 receipt=project_root/"Saved"/"PortfolioAssets.json"
 if not receipt.is_file(): raise SystemExit("Editor asset receipt was not produced")
 data=json.loads(receipt.read_text())
 if not data.get("success"): raise SystemExit("Editor asset generation did not complete")
 print("Native assets generated:",len(data["assets"]))
+if config.get("lyra"):
+    for folder in ("ArenaDemo","Portfolio"):
+        source=project_root/"Content"/folder
+        if source.exists(): shutil.copytree(source,root/"Content"/folder,dirs_exist_ok=True)
+
 if a.package:
     uat=batch/("RunUAT.bat" if system=="Windows" else "RunUAT.sh")
     subprocess.run([str(uat),"BuildCookRun","-project="+str(project),"-noP4","-platform="+target_platform,
-                    "-clientconfig=Development","-build","-cook","-map="+config["map"],
+                    "-clientconfig=Development","-nodebuginfo","-ubtargs=-NoDebugInfo -MaxParallelActions=6","-build","-cook","-map="+config["map"],
                     "-stage","-pak","-archive","-archivedirectory="+str(root/"Artifacts"/target_platform)],check=True)
 if a.run or a.capture:
     exe=engine/"Engine"/"Binaries"/target_platform/("UnrealEditor.exe" if system=="Windows" else "UnrealEditor")
@@ -69,11 +74,15 @@ if a.run or a.capture:
         if frames.exists(): shutil.rmtree(frames)
         capture_receipt=project_root/"Saved"/"PortfolioCapture.json"
         if capture_receipt.exists(): capture_receipt.unlink()
+        evidence_receipt=project_root/"Saved"/"GameplayEvidence.json"
+        if evidence_receipt.exists(): evidence_receipt.unlink()
         cmd+=["-PortfolioDemo","-PortfolioCapture","-PortfolioFrames="+str(config.get("frames",1350)),"-unattended"]
     subprocess.run(cmd,check=True)
 
 
     if a.capture:
+        evidence=json.loads(evidence_receipt.read_text())
+        if not evidence.get("success"): raise SystemExit("Native gameplay objectives were not completed")
         capture=json.loads(capture_receipt.read_text())
         if not capture.get("success"): raise SystemExit("Native frame capture did not complete")
         output=root/"Artifacts"/(root.name+"-Gameplay.mp4")
@@ -81,6 +90,7 @@ if a.run or a.capture:
         subprocess.run(["ffmpeg","-y","-framerate","30","-i",str(frames/"frame-%05d.png"),
                         "-c:v","libx264","-crf","19","-pix_fmt","yuv420p","-movflags","+faststart",str(output)],check=True)
         subprocess.run(["ffmpeg","-v","error","-i",str(output),"-f","null","-"],check=True)
-        shutil.copy2(capture_receipt,output.with_suffix(".json"))
+        capture["gameplay"]=evidence
+        output.with_suffix(".json").write_text(json.dumps(capture,indent=2)+"\n")
         shutil.rmtree(frames)
         print("Native gameplay recording:",output)

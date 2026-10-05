@@ -15,6 +15,7 @@ public:
  virtual void Tick(float DeltaTime) override;
  virtual void BeginPlay() override;
  UFUNCTION(BlueprintNativeEvent) void Interact(APawn* Interactor);
+ virtual void Interact_Implementation(APawn* Interactor);
  UFUNCTION(BlueprintCallable) void PerformAction(APawn* Interactor);
  void Configure(ELanternAction Action,FName Id=NAME_None);
  FText GetPrompt() const;
@@ -22,5 +23,6 @@ public:
  UPROPERTY(EditAnywhere,BlueprintReadWrite) FName PickupId;
 private:
  UPROPERTY() TObjectPtr<class UStaticMeshComponent> Body;
+ UPROPERTY() TObjectPtr<class UPointLightComponent> PowerLight;
+ UPROPERTY() TObjectPtr<class UMaterialInstanceDynamic> PowerIndicator;
 };
-

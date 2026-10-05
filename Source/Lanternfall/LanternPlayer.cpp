@@ -8,6 +8,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Misc/CommandLine.h"
+#include "PortfolioCapture.h"
 #include "Misc/Parse.h"
 
 ALanternPlayer::ALanternPlayer()
@@ -67,7 +68,11 @@ void ALanternPlayer::Journal(){bJournal=!bJournal;}
 void ALanternPlayer::Tick(float Delta)
 {
  Super::Tick(Delta);
- if (IsLocallyControlled() && FParse::Param(FCommandLine::Get(),TEXT("PortfolioDemo"))) AdvanceDemo(Delta);
+ if (IsLocallyControlled() && FParse::Param(FCommandLine::Get(),TEXT("PortfolioDemo")))
+ {
+  const auto* Capture=GetWorld()->GetSubsystem<ULanternCaptureSubsystem>();
+  if (!FParse::Param(FCommandLine::Get(),TEXT("PortfolioCapture")) || (Capture && Capture->IsReady())) AdvanceDemo(Delta);
+ }
 }
 void ALanternPlayer::AdvanceDemo(float Delta)
 {
@@ -92,22 +97,31 @@ void ALanternPlayer::AdvanceDemo(float Delta)
   {AddMovementInput(Direction);return false;}
   return true;
  };
+ auto WalkTo=[this,Delta](FVector Goal)->bool
+ {
+  FVector Offset=Goal-GetActorLocation();Offset.Z=0;
+  Controller->SetControlRotation(FMath::RInterpTo(Controller->GetControlRotation(),Offset.Rotation(),Delta,3.f));
+  if (Offset.Size2D()<65.f) return true;
+  AddMovementInput(Offset.GetSafeNormal2D());return false;
+ };
  switch (DemoStep)
  {
   case 0:if (auto* Target=Find(ELanternAction::Nera);Approach(Target)){Target->Interact(this);Next();}break;
   case 1:if (StepAge>5.f){J->ChooseDialogue(Relay?1:0);Next();}break;
   case 2:if (auto* Target=Find(ELanternAction::Cell,TEXT("Cell_A"));Approach(Target)){Target->Interact(this);Next();}break;
   case 3:if (StepAge>1.5f)Next();break;
-  case 4:if (auto* Target=Find(ELanternAction::Cell,TEXT("Cell_B"));Approach(Target)){Target->Interact(this);bJournal=true;Next();}break;
-  case 5:if (StepAge>3.f){bJournal=false;Save();Next();}break;
-  case 6:AddMovementInput(FVector(0,1,0));if (StepAge>1.5f)Next();break;
-  case 7:Load();Next();break;
-  case 8:if (StepAge>2.f)Next();break;
-  case 9:if (auto* Target=Find(Relay?ELanternAction::Relay:ELanternAction::Clinic);Approach(Target)){Target->Interact(this);Next();}break;
-  case 10:if (StepAge>3.f)Next();break;
-  case 11:if (auto* Target=Find(ELanternAction::Nera);Approach(Target)){Target->Interact(this);Next();}break;
-  case 12:if (StepAge>6.f){J->ChooseDialogue(0);Next();}break;
-  case 13:if (StepAge>3.f){bJournal=true;Save();Next();}break;
+  case 4:if (WalkTo(FVector(-50,450,0)))Next();break;
+  case 5:if (WalkTo(FVector(250,450,0)))Next();break;
+  case 6:if (auto* Target=Find(ELanternAction::Cell,TEXT("Cell_B"));Approach(Target)){Target->Interact(this);bJournal=true;Next();}break;
+  case 7:if (StepAge>3.f){bJournal=false;Save();Next();}break;
+  case 8:AddMovementInput(FVector(0,1,0));if (StepAge>1.5f)Next();break;
+  case 9:bDemoRestored=J->LoadJourney() && J->GetCells()==2;Next();break;
+  case 10:if (StepAge>2.f)Next();break;
+  case 11:if (auto* Target=Find(Relay?ELanternAction::Relay:ELanternAction::Clinic);Approach(Target)){Target->Interact(this);Next();}break;
+  case 12:if (StepAge>3.f)Next();break;
+  case 13:if (auto* Target=Find(ELanternAction::Nera);Approach(Target)){Target->Interact(this);Next();}break;
+  case 14:if (StepAge>6.f){J->ChooseDialogue(0);Next();}break;
+  case 15:if (StepAge>3.f){bJournal=true;Save();Next();}break;
   default:break;
  }
 }

@@ -11,6 +11,13 @@
 #include "HAL/FileManager.h"
 #include "HAL/PlatformMisc.h"
 #include "UnrealClient.h"
+#if WITH_EDITOR
+#include "ShaderCompiler.h"
+#endif
+#include "LanternPlayer.h"
+#include "JourneySubsystem.h"
+#include "Engine/GameInstance.h"
+#include "Kismet/GameplayStatics.h"
 
 void ULanternCaptureSubsystem::Tick(float Delta)
 {
@@ -25,6 +32,9 @@ void ULanternCaptureSubsystem::Tick(float Delta)
   Handle=UGameViewportClient::OnScreenshotCaptured().AddUObject(this,&ULanternCaptureSubsystem::Captured);
   bConfigured=true;
  }
+#if WITH_EDITOR
+ if (GShaderCompilingManager && GShaderCompilingManager->IsCompiling()) {Warmup=0;return;}
+#endif
  if (++Warmup<=30 || bQueued) return;
  bQueued=true;FScreenshotRequest::RequestScreenshot(TEXT("PortfolioFrame"),true,false);
 }
@@ -40,6 +50,19 @@ void ULanternCaptureSubsystem::Captured(int32 Width,int32 Height,const TArray<FC
  ++Frame;
  if (Frame>=Limit)
  {
+  const auto* Player=Cast<ALanternPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(),0));
+  const auto* Journey=GetWorld()->GetGameInstance()->GetSubsystem<UJourneySubsystem>();
+  const bool Complete=Player && Player->WasDemoSaveRestored() && Journey &&
+      Journey->GetSnapshot().Progress==Lantern::Stage::Resolved && Journey->GetCells()==0;
+  if (!Complete)
+  {
+   UE_LOG(LogTemp,Error,TEXT("Lanternfall objectives incomplete: stage=%d route=%d cells=%d saveRestored=%d"),
+      Journey?static_cast<int32>(Journey->GetSnapshot().Progress):-1,Journey?Journey->GetRoute():-1,
+      Journey?Journey->GetCells():-1,Player && Player->WasDemoSaveRestored());
+   bFinished=true;FPlatformMisc::RequestExitWithStatus(false,2);return;
+  }
+  const FString Evidence=FString::Printf(TEXT("{\"success\":true,\"resolved\":true,\"uniqueCellsConsumed\":2,\"route\":%d,\"saveRestored\":true}"),Journey->GetRoute());
+  FFileHelper::SaveStringToFile(Evidence,*(FPaths::ProjectSavedDir()/TEXT("GameplayEvidence.json")));
   const FString Receipt=FString::Printf(TEXT("{\"success\":true,\"frames\":%d,\"width\":%d,\"height\":%d,\"fps\":30,\"renderer\":\"Unreal Engine 5.4\"}"),Frame,Width,Height);
   FFileHelper::SaveStringToFile(Receipt,*(FPaths::ProjectSavedDir()/TEXT("PortfolioCapture.json")));
   bFinished=true;FPlatformMisc::RequestExit(false);
@@ -51,4 +74,3 @@ void ULanternCaptureSubsystem::Deinitialize()
  if (bConfigured) FApp::SetUseFixedTimeStep(false);
  Super::Deinitialize();
 }
-
