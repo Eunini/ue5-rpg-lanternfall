@@ -1,0 +1,11 @@
+Binaries/
+Intermediate/
+Saved/
+DerivedDataCache/
+Artifacts/
+build/
+__pycache__/
+.vs/
+*.sln
+*.mp4
+

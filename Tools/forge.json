@@ -1,0 +1,43 @@
+{
+  "project": "Lanternfall.uproject",
+  "target": "LanternfallEditor",
+  "map": "/Game/Lanternfall/Maps/ReserveCourtyard",
+  "world": "/Script/Lanternfall.LanternWorld",
+  "mode": "/Script/Lanternfall.LanternGameMode",
+  "blueprints": [
+    {
+      "path": "/Game/Lanternfall/Blueprints/BP_Courier",
+      "parent": "/Script/Lanternfall.LanternPlayer",
+      "event": "ReceiveBeginPlay",
+      "call": "BeginJourney"
+    },
+    {
+      "path": "/Game/Lanternfall/Blueprints/BP_Nera",
+      "parent": "/Script/Lanternfall.LanternUsable",
+      "event": "Interact",
+      "call": "PerformAction",
+      "parameter": "Interactor"
+    },
+    {
+      "path": "/Game/Lanternfall/Blueprints/BP_EnergyCell",
+      "parent": "/Script/Lanternfall.LanternUsable",
+      "event": "Interact",
+      "call": "PerformAction",
+      "parameter": "Interactor",
+      "defaults": {
+        "Action": "Cell"
+      }
+    },
+    {
+      "path": "/Game/Lanternfall/Blueprints/BP_Terminal",
+      "parent": "/Script/Lanternfall.LanternUsable",
+      "event": "Interact",
+      "call": "PerformAction",
+      "parameter": "Interactor",
+      "defaults": {
+        "Action": "Clinic"
+      }
+    }
+  ],
+  "frames": 2100
+}
