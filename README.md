@@ -2,7 +2,7 @@
 
 A compact first-person RPG about allocating a town's last reserve power circuit. Two energy cells can restore a field clinic or call for outside help through the relay. The destination changes the dialogue, objective and reward.
 
-The native editor modules compile in Unreal Engine 5.4.4. The repository includes the engine-generated courier, interaction Blueprints, material and courtyard map. A native UE5 run completed the relay story branch, including two unique pickups, save/load and quest resolution. The objective receipt is in `Evidence/NativeObjectives.json`. The clinic gameplay recording is underway.
+The native editor modules compile in Unreal Engine 5.4.4. The repository includes the engine-generated courier, interaction Blueprints, material and courtyard map. A native UE5 run completed the relay story branch, including two unique pickups, save/load and quest resolution. The objective receipt is in `Evidence/NativeObjectives.json`. The clinic branch also completed a native viewport run. [Download its 55-second gameplay recording](https://github.com/Eunini/ue5-rpg-lanternfall/releases/download/native-gameplay-v1/ue5-rpg-lanternfall-Gameplay.mp4). The frame and gameplay receipts are in `Evidence/ViewportCapture.json`.
 
 ## Playable story
 
@@ -40,3 +40,16 @@ cmake --build build
 Forty-eight assertions cover both story branches, cell requirements, unique pickups, destination validation, reward counts, surplus inventory, atomic failed actions and invalid save snapshots. These checks validate the portable C++ state machine; they do not establish native runtime behavior.
 
 The environment uses original procedural geometry and engine primitive meshes. The project has no paid asset dependencies.
+
+## Native objective run
+
+After building the project, launch the same demonstration without graphics to repeat its gameplay objectives:
+
+```bash
+/path/to/UE5.4/Engine/Binaries/Linux/UnrealEditor /path/to/Lanternfall.uproject /Game/Lanternfall/Maps/ReserveCourtyard \
+  -game -NullRHI -NoSound -PortfolioDemo -PortfolioVerify -PortfolioFrames=1650 -unattended
+```
+
+The engine exits successfully only when the expected Blueprint pawn and gameplay objectives are complete. The receipt is written to `Saved/GameplayEvidence.json`. This mode produces no video frames.
+
+Add `-RelayRoute` to exercise the alternate story branch.
