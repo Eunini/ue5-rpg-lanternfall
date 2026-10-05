@@ -11,6 +11,7 @@
 #include "HAL/FileManager.h"
 #include "HAL/PlatformMisc.h"
 #include "UnrealClient.h"
+#include "UObject/Class.h"
 #if WITH_EDITOR
 #include "ShaderCompiler.h"
 #endif
@@ -52,7 +53,7 @@ void ULanternCaptureSubsystem::Captured(int32 Width,int32 Height,const TArray<FC
  {
   const auto* Player=Cast<ALanternPlayer>(UGameplayStatics::GetPlayerPawn(GetWorld(),0));
   const auto* Journey=GetWorld()->GetGameInstance()->GetSubsystem<UJourneySubsystem>();
-  const bool Complete=Player && Player->WasDemoSaveRestored() && Journey &&
+  const bool Complete=Player && Player->GetClass()->GetName()==TEXT("BP_Courier_C") && Player->WasDemoSaveRestored() && Journey &&
       Journey->GetSnapshot().Progress==Lantern::Stage::Resolved && Journey->GetCells()==0;
   if (!Complete)
   {
@@ -61,7 +62,7 @@ void ULanternCaptureSubsystem::Captured(int32 Width,int32 Height,const TArray<FC
       Journey?Journey->GetCells():-1,Player && Player->WasDemoSaveRestored());
    bFinished=true;FPlatformMisc::RequestExitWithStatus(false,2);return;
   }
-  const FString Evidence=FString::Printf(TEXT("{\"success\":true,\"resolved\":true,\"uniqueCellsConsumed\":2,\"route\":%d,\"saveRestored\":true}"),Journey->GetRoute());
+  const FString Evidence=FString::Printf(TEXT("{\"success\":true,\"blueprintClass\":\"BP_Courier_C\",\"resolved\":true,\"uniqueCellsConsumed\":2,\"route\":%d,\"saveRestored\":true}"),Journey->GetRoute());
   FFileHelper::SaveStringToFile(Evidence,*(FPaths::ProjectSavedDir()/TEXT("GameplayEvidence.json")));
   const FString Receipt=FString::Printf(TEXT("{\"success\":true,\"frames\":%d,\"width\":%d,\"height\":%d,\"fps\":30,\"renderer\":\"Unreal Engine 5.4\"}"),Frame,Width,Height);
   FFileHelper::SaveStringToFile(Receipt,*(FPaths::ProjectSavedDir()/TEXT("PortfolioCapture.json")));
