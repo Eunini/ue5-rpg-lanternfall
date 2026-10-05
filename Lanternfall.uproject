@@ -1,2 +1,18 @@
-{"FileVersion":3,"EngineAssociation":"5.4","Description":"Lanternfall: a compact branching narrative RPG.","Modules":[{"Name":"Lanternfall","Type":"Runtime","LoadingPhase":"Default"}]}
-
+{
+  "FileVersion": 3,
+  "EngineAssociation": "5.4",
+  "Description": "Lanternfall: a compact branching narrative RPG.",
+  "Modules": [
+    {
+      "Name": "Lanternfall",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+    {
+      "Name": "AndroidFileServer",
+      "Enabled": false
+    }
+  ]
+}

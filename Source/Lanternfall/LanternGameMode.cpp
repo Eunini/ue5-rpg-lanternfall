@@ -7,8 +7,11 @@
 ALanternGameMode::ALanternGameMode()
 {
  DefaultPawnClass=ALanternPlayer::StaticClass();HUDClass=ALanternHUD::StaticClass();
- static ConstructorHelpers::FClassFinder<APawn> Blueprint(TEXT("/Game/Lanternfall/Blueprints/BP_Courier"));
- if (Blueprint.Succeeded()) DefaultPawnClass=Blueprint.Class;
+ if (!IsRunningCommandlet())
+ {
+  static ConstructorHelpers::FClassFinder<APawn> Blueprint(TEXT("/Game/Lanternfall/Blueprints/BP_Courier"));
+   if (Blueprint.Succeeded()) DefaultPawnClass=Blueprint.Class;
+ }
 }
 void ALanternGameMode::InitGame(const FString& MapName,const FString& Options,FString& ErrorMessage)
 {

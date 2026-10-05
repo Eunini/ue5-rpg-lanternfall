@@ -2,7 +2,7 @@
 
 A compact first-person RPG about allocating a town's last reserve power circuit. Two energy cells can restore a field clinic or call for outside help through the relay. The destination changes the dialogue, objective and reward.
 
-The C++ gameplay systems, Blueprint graph generator and original courtyard scene are implemented. Native engine compilation and gameplay recording are in progress; downloadable gameplay and builds will be linked when available.
+The native editor modules compile in Unreal Engine 5.4.4. The repository includes the engine-generated courier, interaction Blueprints, material and courtyard map. Native gameplay recording is underway; the download will be linked once reviewed.
 
 ## Playable story
 
@@ -25,7 +25,7 @@ The Blueprint courier calls C++ from BeginPlay. The Nera, energy-cell and termin
 python3 Tools/portfolio.py --engine /path/to/UE5.4 --run
 ```
 
-Use Unreal Engine 5.4. Add `--package` for a Development build or `--capture` for an MP4 recorded from the engine viewport. Capture requires FFmpeg and a working graphics renderer. The scripted demonstration follows the clinic route; `-RelayRoute` selects the other branch when launching the game manually.
+Use Unreal Engine 5.4. Add `--package` for a Development build or `--capture` for an MP4 recorded from the engine viewport. Capture requires FFmpeg and a working graphics renderer. On Linux, `--software-renderer` allows a configured Vulkan CPU device for recording. The scripted demonstration follows the clinic route; `-RelayRoute` selects the other branch when launching the game manually.
 
 Controls: WASD move, mouse look, E interact, 1–3 dialogue choice, Tab journal, F6 save, F7 load and Space jump.
 
